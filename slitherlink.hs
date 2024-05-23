@@ -40,9 +40,6 @@ expand :: [[a]] -> [a]
 expand [] = []
 expand (x:xs) = x ++ expand xs
 
--- 引かれた線がひとつながりか
---isConnected
-
 -- すべての数字に対して線が引かれているか
 --isAllNumbersSatisfied
 
