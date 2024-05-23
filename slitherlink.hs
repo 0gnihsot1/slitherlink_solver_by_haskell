@@ -24,6 +24,7 @@ getNum :: Board -> Int -> Int -> Int
 getNum board x y = (board !! y) !! x
 
 -- 指定位置の周囲のライン数を取得する
+getLineCnt :: getLineCnt -> Int -> Int -> Int
 getLineCnt board x y = sum $ concatMap (f x') $ f y' board 
   where x' = x * 2
         y' = y * 2
