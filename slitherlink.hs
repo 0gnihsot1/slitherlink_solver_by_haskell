@@ -23,9 +23,17 @@ type LineBoard = [[Int]]
 getNum :: Board -> Int -> Int -> Int
 getNum board x y = (board !! y) !! x
 
+-- 盤面の横幅を取得する
+getBoardWidth :: Board -> Int
+getBoardWidth board = length (board !! 0)
+
+-- 盤面の縦幅を取得する
+getBoardHeight :: Board -> Int
+getBoardHeight board = length board
+
 -- 指定位置の周囲のライン数を取得する
-getLineCnt :: getLineCnt -> Int -> Int -> Int
-getLineCnt board x y = sum $ concatMap (f x') $ f y' board 
+getLineCnt :: Board -> Int -> Int -> Int
+getLineCnt board x y = sum $ concatMap (f x') $ f y' board
   where x' = x * 2
         y' = y * 2
         f n xs = take 3 $ drop n xs
@@ -43,6 +51,9 @@ expand (x:xs) = x ++ expand xs
 
 -- すべての数字に対して線が引かれているか
 --isAllNumbersSatisfied
+--TODO
+isAllNumbersSatisfied board [] = True
+isAllNumbersSatisfied board lineBoard = True
 
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> (Int, Int)
