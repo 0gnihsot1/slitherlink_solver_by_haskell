@@ -51,12 +51,12 @@ expand [] = []
 expand (x:xs) = x ++ expand xs
 
 -- すべての数字に対して線が引かれているか
-isAllNumbersSatisfied :: Monad m => [[Int]] -> Board -> m Bool
+isAllNumbersSatisfied :: Monad m => Board -> LineBoard -> m Bool
 isAllNumbersSatisfied board lineBoard = iter board lineBoard makeIdx
-  where makeIdx = [(x, y) | x <- [0..getBoardWidth board], y <- [0..getBoardHeight board], getNum board x y < 4]
+  where makeIdx = [(x, y) | x <- [0..getBoardWidth board - 1], y <- [0..getBoardHeight board - 1], getNum board x y < 4]
         iter board lineBoard [] = return True
         iter board lineBoard ((x, y):idx) =
-          if getNum board x y == getLineCnt lineBoard x y then return False 
+          if getNum board x y /= getLineCnt lineBoard x y then return False 
           else iter board lineBoard idx
 
 -- 最初の数字の場所を取得する
