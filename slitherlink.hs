@@ -1,4 +1,5 @@
 -- スリザーリンクを解く
+import Control.Monad
 
 -- 問題
 q00 :: Board
@@ -50,10 +51,13 @@ expand [] = []
 expand (x:xs) = x ++ expand xs
 
 -- すべての数字に対して線が引かれているか
---isAllNumbersSatisfied
---TODO
-isAllNumbersSatisfied board [] = True
-isAllNumbersSatisfied board lineBoard = True
+isAllNumbersSatisfied :: Monad m => [[Int]] -> Board -> m Bool
+isAllNumbersSatisfied board lineBoard = iter board lineBoard makeIdx
+  where makeIdx = [(x, y) | x <- [0..getBoardWidth board], y <- [0..getBoardHeight board], getNum board x y < 4]
+        iter board lineBoard [] = return True
+        iter board lineBoard ((x, y):idx) =
+          if getNum board x y == getLineCnt lineBoard x y then return False 
+          else iter board lineBoard idx
 
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> (Int, Int)
