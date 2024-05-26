@@ -32,6 +32,10 @@ getBoardWidth board = length (board !! 0)
 getBoardHeight :: Board -> Int
 getBoardHeight board = length board
 
+-- 指定位置のLineBoardの位置を取得する
+getLineBoardPosition :: LineBoard -> Int -> Int -> (Int, Int)
+getLineBoardPosition lineBoard boardX boardY = (boardX * 2 + 1, boardY * 2 + 1)
+
 -- 指定位置の周囲のライン数を取得する
 getLineCnt :: Board -> Int -> Int -> Int
 getLineCnt board x y = sum $ concatMap (f x') $ f y' board
@@ -40,9 +44,11 @@ getLineCnt board x y = sum $ concatMap (f x') $ f y' board
         f n xs = take 3 $ drop n xs
 
 -- ラインの初期状態を取得する
-getInitLineBoard :: Int -> Int -> LineBoard
-getInitLineBoard x y = getArr y $ getArr x 0
-  where getArr 0 _ = []
+getInitLineBoard :: Board -> LineBoard
+getInitLineBoard board = getArr y $ getArr x 0
+  where x = getBoardWidth board
+        y = getBoardHeight board
+        getArr 0 _ = []
         getArr n a = a : getArr (n-1) a
 
 -- 展開する
@@ -53,7 +59,10 @@ expand (x:xs) = x ++ expand xs
 -- すべての数字に対して線が引かれているか
 isAllNumbersSatisfied :: Monad m => Board -> LineBoard -> m Bool
 isAllNumbersSatisfied board lineBoard = iter board lineBoard makeIdx
-  where makeIdx = [(x, y) | x <- [0..getBoardWidth board - 1], y <- [0..getBoardHeight board - 1], getNum board x y < 4]
+  where makeIdx = [(x, y) | 
+                    x <- [0..getBoardWidth board - 1],
+                    y <- [0..getBoardHeight board - 1],
+                    getNum board x y < 4]
         iter board lineBoard [] = return True
         iter board lineBoard ((x, y):idx) =
           if getNum board x y /= getLineCnt lineBoard x y then return False 
@@ -66,4 +75,8 @@ getFirstNumPosition board = (pos `mod` 10, pos `div` 10)
         checkEnable = \x -> x == 9 || x == 0
 
 -- 解法
---solver :: Board -> [Board]
+solver :: Board -> Board
+solver board = solve board lineBoard (getFirstNumPosition board)
+  where lineBoard = getInitLineBoard board
+        solve board lineBoard position = board
+--TODO
