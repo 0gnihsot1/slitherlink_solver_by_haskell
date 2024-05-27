@@ -24,6 +24,16 @@ type LineBoard = [[Int]]
 getNum :: Board -> Int -> Int -> Int
 getNum board x y = (board !! y) !! x
 
+-- n 番目の要素を m に置き換える
+subst :: [a] -> Int -> a -> [a]
+subst [] _ _ = []
+subst (x:xs) 0 m = m : xs
+subst (x:xs) n m = x : subst xs (n - 1) m
+
+-- 数字を書き込む
+putNum :: LineBoard -> Int -> Int -> Int -> Board
+putNum board x y n = subst board y $ subst (board !! y) x n
+
 -- 盤面の横幅を取得する
 getBoardWidth :: Board -> Int
 getBoardWidth board = length (board !! 0)
@@ -46,8 +56,8 @@ getLineCnt board x y = sum $ concatMap (f x') $ f y' board
 -- ラインの初期状態を取得する
 getInitLineBoard :: Board -> LineBoard
 getInitLineBoard board = getArr y $ getArr x 0
-  where x = getBoardWidth board
-        y = getBoardHeight board
+  where x = (getBoardWidth board) * 2 + 1
+        y = (getBoardHeight board) * 2 + 1
         getArr 0 _ = []
         getArr n a = a : getArr (n-1) a
 
@@ -78,5 +88,6 @@ getFirstNumPosition board = (pos `mod` 10, pos `div` 10)
 solver :: Board -> Board
 solver board = solve board lineBoard (getFirstNumPosition board)
   where lineBoard = getInitLineBoard board
-        solve board lineBoard position = board
---TODO
+        solve board lineBoard position = board --iter board lineBoard makeIdx
+        makeIdx = [(0,-1), (-1,0), (1,0), (0,1)]
+        
