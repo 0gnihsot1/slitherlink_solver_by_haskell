@@ -55,11 +55,13 @@ getLineCnt board x y = sum $ concatMap (f x') $ f y' board
 
 -- ラインの初期状態を取得する
 getInitLineBoard :: Board -> LineBoard
-getInitLineBoard board = getArr y $ getArr x 0
-  where x = (getBoardWidth board) * 2 + 1
-        y = (getBoardHeight board) * 2 + 1
-        getArr 0 _ = []
-        getArr n a = a : getArr (n-1) a
+getInitLineBoard board = getInitLineBoard3 board
+  where width = (getBoardWidth board) * 2 + 1
+        height = (getBoardHeight board) * 2 + 1
+        getInitLineBoard2 [] = [0]
+        getInitLineBoard2 (x:xs) = 0 : x : getInitLineBoard2 xs
+        getInitLineBoard3 [] = [replicate width 0]
+        getInitLineBoard3 (x:xs) = (replicate width 0) : getInitLineBoard2 x : getInitLineBoard3 xs
 
 -- 展開する
 expand :: [[a]] -> [a]
