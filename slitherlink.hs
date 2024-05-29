@@ -42,10 +42,6 @@ getBoardWidth board = length (board !! 0)
 getBoardHeight :: Board -> Int
 getBoardHeight board = length board
 
--- 指定位置のLineBoardの位置を取得する
-getLineBoardPosition :: LineBoard -> Int -> Int -> (Int, Int)
-getLineBoardPosition lineBoard boardX boardY = (boardX * 2 + 1, boardY * 2 + 1)
-
 -- 指定位置の周囲のライン数を取得する
 getLineCnt :: Board -> Int -> Int -> Int
 getLineCnt board x y = sum $ concatMap (f x') $ f y' board
