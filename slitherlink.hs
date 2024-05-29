@@ -55,13 +55,13 @@ getLineCnt board x y = sum $ concatMap (f x') $ f y' board
 
 -- ラインの初期状態を取得する
 getInitLineBoard :: Board -> LineBoard
-getInitLineBoard board = getInitLineBoard3 board
+getInitLineBoard board = makeYs board
   where width = (getBoardWidth board) * 2 + 1
         height = (getBoardHeight board) * 2 + 1
-        getInitLineBoard2 [] = [0]
-        getInitLineBoard2 (x:xs) = 0 : x : getInitLineBoard2 xs
-        getInitLineBoard3 [] = [replicate width 0]
-        getInitLineBoard3 (x:xs) = (replicate width 0) : getInitLineBoard2 x : getInitLineBoard3 xs
+        makeXs [] = [0]
+        makeXs (x:xs) = 0 : x : makeXs xs
+        makeYs [] = [replicate width 0]
+        makeYs (x:xs) = (replicate width 0) : makeXs x : makeYs xs
 
 -- 展開する
 expand :: [[a]] -> [a]
@@ -82,14 +82,23 @@ isAllNumbersSatisfied board lineBoard = iter board lineBoard makeIdx
 
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> (Int, Int)
-getFirstNumPosition board = (pos `mod` 10, pos `div` 10)
+getFirstNumPosition board = (pos `mod` width, pos `div` height)
   where pos = length $ takeWhile checkEnable (expand board)
         checkEnable = \x -> x == 9 || x == 0
+        width = getBoardWidth board
+        height = getBoardHeight board
+
+-- 引いたラインの両脇の整合性をチェックする
+checkLineIntegrity :: LineBoard -> Int -> Int -> Bool
+checkLineIntegrity lineBoard x y = False
+--TODO
 
 -- 解法
-solver :: Board -> Board
-solver board = solve board lineBoard (getFirstNumPosition board)
+solver :: Board -> LineBoard
+solver board = solve lineBoard (getFirstNumPosition lineBoard)
   where lineBoard = getInitLineBoard board
-        solve board lineBoard position = board --iter board lineBoard makeIdx
+        solve lineBoard position = iter lineBoard makeIdx
         makeIdx = [(0,-1), (-1,0), (1,0), (0,1)]
+        iter lineBoard ((x,y):idx) = do
+          return []
         
