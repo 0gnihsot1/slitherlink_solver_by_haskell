@@ -34,6 +34,10 @@ subst (x:xs) n m = x : subst xs (n - 1) m
 putNum :: LineBoard -> Int -> Int -> Int -> Board
 putNum board x y n = subst board y $ subst (board !! y) x n
 
+-- ラインを引く
+putLine :: LineBoard -> Int -> Int -> LineBoard
+putLine board x y = putNum board x y 1
+
 -- 盤面の横幅を取得する
 getBoardWidth :: Board -> Int
 getBoardWidth board = length (board !! 0)
@@ -90,11 +94,15 @@ checkLineIntegrity lineBoard x y = False
 --TODO
 
 -- 解法
-solver :: Board -> LineBoard
+--solver :: Board -> LineBoard
 solver board = solve lineBoard (getFirstNumPosition lineBoard)
   where lineBoard = getInitLineBoard board
-        solve lineBoard position = iter lineBoard makeIdx
+        solve board (x, y) = iter lineBoard x y makeIdx
         makeIdx = [(0,-1), (-1,0), (1,0), (0,1)]
-        iter lineBoard ((x,y):idx) = do
-          return []
+        iter lineBoard x y ((x',y'):idx) = do
+          let targetX = x + x'
+              targetY = y + y'
+          guard (lineBoard !! targetY !! targetX == 0)
+          guard (checkLineIntegrity lineBoard targetX targetY)
+          return lineBoard
         
