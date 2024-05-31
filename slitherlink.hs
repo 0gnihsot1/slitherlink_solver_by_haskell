@@ -47,10 +47,11 @@ getBoardHeight :: Board -> Int
 getBoardHeight board = length board
 
 -- 指定位置の周囲のライン数を取得する
-getLineCnt :: Board -> Int -> Int -> Int
-getLineCnt board x y = sum $ concatMap (f x') $ f y' board
-  where x' = x * 2
-        y' = y * 2
+-- TODO 取得方法要修正 斜めの位置を含めないようにする
+getLineCnt :: LineBoard -> Int -> Int -> Int
+getLineCnt board x y = (sum $ concatMap (f x') $ f y' board) - (getNum board x y)
+  where x' = x - 1
+        y' = y - 1
         f n xs = take 3 $ drop n xs
 
 -- ラインの初期状態を取得する
@@ -90,15 +91,19 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
 
 -- 引いたラインの両脇の整合性をチェックする
 checkLineIntegrity :: LineBoard -> Int -> Int -> Bool
-checkLineIntegrity lineBoard x y = False
---TODO
+checkLineIntegrity lineBoard x y = 
+  if odd y then check (x-1) y && check (x+1) y
+  else check x (y-1) && check x (y+1)
+  where check (-1) _ = True
+        check _ (-1) = True
+        check x' y' = getLineCnt lineBoard x' y' <= getNum lineBoard x' y'
 
 -- 解法
 --solver :: Board -> LineBoard
 solver board = solve lineBoard (getFirstNumPosition lineBoard)
   where lineBoard = getInitLineBoard board
         solve board (x, y) = iter lineBoard x y makeIdx
-        makeIdx = [(0,-1), (-1,0), (1,0), (0,1)]
+        makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
         iter lineBoard x y ((x',y'):idx) = do
           let targetX = x + x'
               targetY = y + y'
