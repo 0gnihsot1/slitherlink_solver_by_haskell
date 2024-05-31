@@ -100,6 +100,7 @@ checkLineIntegrity lineBoard x y =
 
 -- 解法
 --solver :: Board -> LineBoard
+--TODO 
 solver board = solve lineBoard (getFirstNumPosition lineBoard)
   where lineBoard = getInitLineBoard board
         solve board (x, y) = iter lineBoard x y makeIdx
