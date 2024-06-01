@@ -1,20 +1,6 @@
 -- スリザーリンクを解く
 import Control.Monad
 
--- 問題
-q00 :: Board
-q00 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
-       [0, 3, 9, 9, 1,  9, 1, 9, 9, 0],
-       [9, 9, 2, 3, 9,  9, 0, 9, 9, 2],
-       [1, 9, 9, 9, 9,  9, 9, 3, 9, 9],
-       [0, 9, 9, 3, 3,  9, 9, 0, 9, 9],
-       
-       [9, 9, 2, 9, 9,  0, 3, 9, 9, 0],
-       [9, 9, 1, 9, 9,  9, 9, 9, 9, 2],
-       [3, 9, 9, 0, 9,  9, 1, 2, 9, 9],
-       [3, 9, 9, 2, 9,  2, 9, 9, 3, 3],
-       [9, 3, 1, 9, 9,  1, 9, 9, 9, 9]]
-
 -- 盤面
 type Board = [[Int]]
 -- ラインの盤面
@@ -99,15 +85,42 @@ checkLineIntegrity lineBoard x y =
 
 -- 解法
 --solver :: Board -> LineBoard
---TODO 
-solver board = solve lineBoard (getFirstNumPosition lineBoard)
-  where lineBoard = getInitLineBoard board
-        solve board (x, y) = iter lineBoard x y makeIdx
-        makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
-        iter lineBoard x y ((x',y'):idx) = do
+-- 1.初期ラインボードを作成する
+-- 2.最初の数字の場所を取得する
+-- 3.仮のラインを引く
+--    →引けるラインがなければ失敗なので前のラインに戻る
+-- 4.整合性チェック
+--    →Falseならば3へ戻る
+-- 5.結合チェック
+--    →Trueならば6を実行
+-- 6.全数字に対して線が引かれているかチェック
+--    →Trueならば回答する
+--    →Falseならば次のラインを引く(3)
+solver board = solve1 board
+  where solve1 board = solve2 (getInitLineBoard board)
+        solve2 lineBoard = solve3 lineBoard (getFirstNumPosition lineBoard)
+        solve3 lineBoard (x, y) = solve4 lineBoard x y makeIdx3
+        solve4 lineBoard x y ((x', y'):idx) = do
           let targetX = x + x'
               targetY = y + y'
           guard (lineBoard !! targetY !! targetX == 0)
           guard (checkLineIntegrity lineBoard targetX targetY)
+          --TODO 結合チェック
+          --guard ()
           return lineBoard
-        
+        makeIdx3 = [(0,-1), (1,0), (0,1), (-1,0)]
+
+-- 問題
+q00 :: Board
+q00 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
+       [0, 3, 9, 9, 1,  9, 1, 9, 9, 0],
+       [9, 9, 2, 3, 9,  9, 0, 9, 9, 2],
+       [1, 9, 9, 9, 9,  9, 9, 3, 9, 9],
+       [0, 9, 9, 3, 3,  9, 9, 0, 9, 9],
+       
+       [9, 9, 2, 9, 9,  0, 3, 9, 9, 0],
+       [9, 9, 1, 9, 9,  9, 9, 9, 9, 2],
+       [3, 9, 9, 0, 9,  9, 1, 2, 9, 9],
+       [3, 9, 9, 2, 9,  2, 9, 9, 3, 3],
+       [9, 3, 1, 9, 9,  1, 9, 9, 9, 9]]
+       
