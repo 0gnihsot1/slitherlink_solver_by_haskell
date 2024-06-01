@@ -21,6 +21,7 @@ type Board = [[Int]]
 type LineBoard = [[Int]]
 
 -- 数字を取得する
+-- 枠をはみ出した場合はエラーとなる
 getNum :: Board -> Int -> Int -> Int
 getNum board x y = (board !! y) !! x
 
@@ -47,12 +48,10 @@ getBoardHeight :: Board -> Int
 getBoardHeight board = length board
 
 -- 指定位置の周囲のライン数を取得する
--- TODO 取得方法要修正 斜めの位置を含めないようにする
 getLineCnt :: LineBoard -> Int -> Int -> Int
-getLineCnt board x y = (sum $ concatMap (f x') $ f y' board) - (getNum board x y)
-  where x' = x - 1
-        y' = y - 1
-        f n xs = take 3 $ drop n xs
+getLineCnt board x y = sum $ map f makeIdx
+  where makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
+        f (x', y') = getNum board (x + x') (y + y')
 
 -- ラインの初期状態を取得する
 getInitLineBoard :: Board -> LineBoard
