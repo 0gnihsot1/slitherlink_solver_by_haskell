@@ -11,19 +11,12 @@ type LineBoard = [[Int]]
 getNum :: Board -> Int -> Int -> Int
 getNum board x y = board !! y !! x
 
--- n 番目の要素を m に置き換える
-subst :: [a] -> Int -> a -> [a]
-subst [] _ _ = []
-subst (x:xs) 0 m = m : xs
-subst (x:xs) n m = x : subst xs (n - 1) m
-
--- 数字を書き込む
-putNum :: LineBoard -> Int -> Int -> Int -> Board
-putNum board x y n = subst board y $ subst (board !! y) x n
-
 -- ラインを引く
 putLine :: LineBoard -> Int -> Int -> LineBoard
-putLine board x y = putNum board x y 1
+putLine board x y = subst board y $ subst (board !! y) x 1
+  where subst [] _ _ = []
+        subst (x:xs) 0 m = m : xs
+        subst (x:xs) n m = x : subst xs (n - 1) m
 
 -- 盤面の横幅を取得する
 getWidth :: Board -> Int
@@ -50,16 +43,13 @@ getInitLineBoard board = makeYs board
         makeYs (x:xs) = (replicate width 0) : makeXs x : makeYs xs
 
 -- すべての数字に対して線が引かれているか
-isAllNumbersSatisfied :: Monad m => Board -> LineBoard -> m Bool
-isAllNumbersSatisfied board lineBoard = iter board lineBoard makeIdx
+checkAllNumSatisfied :: Board -> LineBoard -> Bool
+checkAllNumSatisfied board lineBoard = foldr f True makeIdx
   where makeIdx = [(x, y) | 
                     x <- [0..getWidth board - 1],
                     y <- [0..getHeight board - 1],
                     getNum board x y < 4]
-        iter board lineBoard [] = return True
-        iter board lineBoard ((x, y):idx) =
-          if getNum board x y /= getLineCnt lineBoard x y then return False 
-          else iter board lineBoard idx
+        f (x, y) a = getLineCnt lineBoard x y == getNum board x y
 
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> (Int, Int)
@@ -102,20 +92,20 @@ checkLineLinked board x y = (sum $ map f makeIdx) == 2
 --    →Falseならば次のラインを引く(3)
 solver board = solve1
   where lineBoard = getInitLineBoard board
-        solve1 = solve2 (getFirstNumPosition lineBoard)
-        solve2 (x, y) = solve3 x y makeIdx
-        solve3 x y ((x', y'):idx) = do
+        solve1 = solve2 lineBoard (getFirstNumPosition lineBoard)
+        solve2 board (x, y) = solve3 board x y makeIdx
+        solve3 board x y ((x', y'):idx) = do
           let targetX = x + x'
               targetY = y + y'
-              tmpLineBoard = putLine lineBoard targetX targetY
+              tmpLineBoard = putLine board targetX targetY
               makeNewIdx =
                 if odd targetY then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
                 else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
           guard (board !! targetY !! targetX == 0)
           guard (checkLineIntegrity tmpLineBoard targetX targetY)
           guard (checkLineLinked tmpLineBoard targetX targetY)
---          if isAllNumbersSatisfied board tmpLineBoard then return tmpLineBoard
---          else solve3 targetX targetY (makeNewIdx targetY)
+          if checkAllNumSatisfied board tmpLineBoard then return tmpLineBoard
+          else solve3 tmpLineBoard targetX targetY makeNewIdx
         makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
 
 -- 問題
