@@ -8,6 +8,11 @@ type LineBoard = [[Int]]
 -- ポジション
 type Position = (Int, Int)
 
+-- 空白
+blank = 9
+-- ライン
+line = 1
+
 -- 数字を取得する
 -- 枠をはみ出した場合はエラーとなる
 getNum :: Board -> Position -> Int
@@ -15,7 +20,7 @@ getNum board (x, y) = board !! y !! x
 
 -- ラインを引く
 putLine :: LineBoard -> Position -> LineBoard
-putLine board (x, y) = subst board y $ subst (board !! y) x 1
+putLine board (x, y) = subst board y $ subst (board !! y) x line
   where subst [] _ _ = []
         subst (x:xs) 0 m = m : xs
         subst (x:xs) n m = x : subst xs (n - 1) m
@@ -57,7 +62,7 @@ checkAllNumSatisfied board lineBoard = foldr f True makeIdx
 getFirstNumPosition :: Board -> Position
 getFirstNumPosition board = (pos `mod` width, pos `div` height)
   where pos = length $ takeWhile checkEnable (expand board)
-        checkEnable = \x -> x == 9 || x == 0
+        checkEnable = \x -> x == blank || x == 0
         width = getWidth board
         height = getHeight board
         expand [] = []
@@ -103,6 +108,10 @@ solver board = solve1 (getInitLineBoard board)
               makeTmpIdx = 
                 if odd targetY then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
                 else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
+          guard (targetX >= 0)
+          guard (targetY >= 0)
+          guard (targetX < getWidth lineBoard)
+          guard (targetY < getWidth lineBoard)
           guard (lineBoard !! targetY !! targetX == 0)
           guard (checkLineIntegrity tmpLineBoard (targetX, targetY))
           guard (checkLineLinked tmpLineBoard (targetX, targetY))
