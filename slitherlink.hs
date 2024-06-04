@@ -81,8 +81,8 @@ checkLineIntegrity lineBoard (x, y) =
 checkLineLinked :: LineBoard -> Position -> Bool
 checkLineLinked board (x, y) = (sum $ map f makeIdx) == 2
   where makeIdx = 
-          if odd y then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
-          else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
+          if odd y then [(x'',y'')|(x'',y'')<-[(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board]
+          else [(x'',y'')|(x'',y'')<-[(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board] 
         f (x', y') = getNum board ((x + x'), (y + y'))
 
 -- 解法
@@ -102,19 +102,34 @@ solver board = solve1 (getInitLineBoard board)
   where solve1 lineBoard = solve2 lineBoard (getFirstNumPosition lineBoard)
         solve2 lineBoard (x, y) = solve3 lineBoard (x, y) makeIdx
         solve3 lineBoard (x, y) ((x', y'):idx) = do
+          print "lineBoard:"
+          print lineBoard
           let targetX = x + x'
               targetY = y + y'
               tmpLineBoard = putLine lineBoard (targetX, targetY)
               makeTmpIdx = 
                 if odd targetY then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
                 else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
+          print "targetX:"
+          print targetX
+          print "targetY:"
+          print targetY
+          print "tmpLineBoard:"
+          print tmpLineBoard
           guard (targetX >= 0)
+          print "targetX >= 0"
           guard (targetY >= 0)
+          print "targetY >= 0"
           guard (targetX < getWidth lineBoard)
+          print "targetX < getWidth lineBoard"
           guard (targetY < getWidth lineBoard)
+          print "targetY < getWidth lineBoard"
           guard (lineBoard !! targetY !! targetX == 0)
+          print "lineBoard !! targetY !! targetX == 0"
           guard (checkLineIntegrity tmpLineBoard (targetX, targetY))
+          print "checkLineIntegrity tmpLineBoard (targetX, targetY)"
           guard (checkLineLinked tmpLineBoard (targetX, targetY))
+          print "checkLineLinked tmpLineBoard (targetX, targetY)"
           if checkAllNumSatisfied board tmpLineBoard then return tmpLineBoard
           else solve3 tmpLineBoard (targetX, targetY) makeTmpIdx
         makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
@@ -132,4 +147,3 @@ q00 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
        [3, 9, 9, 0, 9,  9, 1, 2, 9, 9],
        [3, 9, 9, 2, 9,  2, 9, 9, 3, 3],
        [9, 3, 1, 9, 9,  1, 9, 9, 9, 9]]
-       
