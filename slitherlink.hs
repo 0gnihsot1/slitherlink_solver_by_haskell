@@ -20,6 +20,8 @@ getNum board (x, y) = board !! y !! x
 
 -- ラインを引く
 putLine :: LineBoard -> Position -> LineBoard
+putLine board (-1, _) = board
+putLine board (_, -1) = board
 putLine board (x, y) = subst board y $ subst (board !! y) x line
   where subst [] _ _ = []
         subst (x:xs) 0 m = m : xs
@@ -51,12 +53,12 @@ getInitLineBoard board = makeYs board
 
 -- すべての数字に対して線が引かれているか
 checkAllNumSatisfied :: Board -> LineBoard -> Bool
-checkAllNumSatisfied board lineBoard = foldr f True makeIdx
+checkAllNumSatisfied board lineBoard = and $ map f makeIdx
   where makeIdx = [(x, y) | 
                     x <- [0..getWidth board - 1],
                     y <- [0..getHeight board - 1],
                     getNum board (x, y) < 4]
-        f (x, y) a = getLineCnt lineBoard (x, y) == getNum board (x, y)
+        f (x, y) = getLineCnt lineBoard (x*2+1, y*2+1) == getNum board (x, y)
 
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> Position
@@ -81,8 +83,8 @@ checkLineIntegrity lineBoard (x, y) =
 checkLineLinked :: LineBoard -> Position -> Bool
 checkLineLinked board (x, y) = (sum $ map f makeIdx) == 2
   where makeIdx = 
-          if odd y then [(x'',y'')|(x'',y'')<-[(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board]
-          else [(x'',y'')|(x'',y'')<-[(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board] 
+          if even y then [(x'',y'')|(x'',y'')<-[(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board]
+          else [(x'',y'')|(x'',y'')<-[(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board]
         f (x', y') = getNum board ((x + x'), (y + y'))
 
 -- 解法
@@ -108,7 +110,7 @@ solver board = solve1 (getInitLineBoard board)
               targetY = y + y'
               tmpLineBoard = putLine lineBoard (targetX, targetY)
               makeTmpIdx = 
-                if odd targetY then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
+                if even targetY then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
                 else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
           print "targetX:"
           print targetX
@@ -128,8 +130,8 @@ solver board = solve1 (getInitLineBoard board)
           print "lineBoard !! targetY !! targetX == 0"
           guard (checkLineIntegrity tmpLineBoard (targetX, targetY))
           print "checkLineIntegrity tmpLineBoard (targetX, targetY)"
-          guard (checkLineLinked tmpLineBoard (targetX, targetY))
-          print "checkLineLinked tmpLineBoard (targetX, targetY)"
+          guard (not $ checkLineLinked tmpLineBoard (targetX, targetY))
+          print "not $ checkLineLinked tmpLineBoard (targetX, targetY)"
           if checkAllNumSatisfied board tmpLineBoard then return tmpLineBoard
           else solve3 tmpLineBoard (targetX, targetY) makeTmpIdx
         makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
