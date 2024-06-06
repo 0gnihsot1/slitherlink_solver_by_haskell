@@ -20,8 +20,6 @@ getNum board (x, y) = board !! y !! x
 
 -- ラインを引く
 putLine :: LineBoard -> Position -> LineBoard
-putLine board (-1, _) = board
-putLine board (_, -1) = board
 putLine board (x, y) = subst board y $ subst (board !! y) x line
   where subst [] _ _ = []
         subst (x:xs) 0 m = m : xs
@@ -102,16 +100,13 @@ checkLineLinked board (x, y) = (sum $ map f makeIdx) == 2
 --    →Falseならば次のラインを引く(3)
 solver board = solve1 (getInitLineBoard board)
   where solve1 lineBoard = solve2 lineBoard (getFirstNumPosition lineBoard)
-        solve2 lineBoard (x, y) = solve3 lineBoard (x, y) makeIdx
+        solve2 lineBoard (x, y) = solve3 lineBoard (x, y) (makeIdx lineBoard)
         solve3 lineBoard (x, y) ((x', y'):idx) = do
           print "lineBoard:"
           print lineBoard
           let targetX = x + x'
               targetY = y + y'
               tmpLineBoard = putLine lineBoard (targetX, targetY)
-              makeTmpIdx = 
-                if even targetY then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
-                else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
           print "targetX:"
           print targetX
           print "targetY:"
@@ -133,8 +128,11 @@ solver board = solve1 (getInitLineBoard board)
           guard (not $ checkLineLinked tmpLineBoard (targetX, targetY))
           print "not $ checkLineLinked tmpLineBoard (targetX, targetY)"
           if checkAllNumSatisfied board tmpLineBoard then return tmpLineBoard
-          else solve3 tmpLineBoard (targetX, targetY) makeTmpIdx
-        makeIdx = [(0,-1), (1,0), (0,1), (-1,0)]
+          else solve3 tmpLineBoard (targetX, targetY) (makeTmpIdx targetY)
+        makeIdx lineBoard = [(x, y) | x <- [0..getWidth lineBoard], y <- [0..getHeight lineBoard]]
+        makeTmpIdx y = 
+          if even y then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
+          else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
 
 -- 問題
 q00 :: Board
