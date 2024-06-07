@@ -38,7 +38,8 @@ putLine board (x, y) l = subst board y $ subst (board !! y) x l
 
 -- ラインを引く
 putLines :: LineBoard -> Position -> Int -> Int -> Int -> Int -> LineBoard
-putLines lineBoard (x, y) top right bottom left = putLineTop (putLineRight (putLineBottom (putLineLeft lineBoard)))
+putLines lineBoard (x, y) top right bottom left =
+  putLineTop $ putLineRight $ putLineBottom $ putLineLeft lineBoard
   where putLineTop lineBoard = putLine lineBoard (x*3+1, y*3) top
         putLineRight lineBoard = putLine lineBoard (x*3+2, y*3+1) right
         putLineBottom lineBoard = putLine lineBoard (x*3+1, y*3+2) bottom
@@ -108,10 +109,10 @@ solver board = iter initLineBoard makeIdx
           let s = sum[top, right, bottom, left]
           guard (s < 4)
           guard (s == getNum board idx || getNum board idx == blank)
-          guard (getLineTop lineBoard idx == getLineBottomOfTop lineBoard idx)
-          guard (getLineRight lineBoard idx == getLineLeftOfRight board lineBoard idx)
-          guard (getLineBottom lineBoard idx == getLineTopOfBottom board lineBoard idx)
-          guard (getLineLeft lineBoard idx == getLineRightOfLeft lineBoard idx)
+          guard (top == getLineBottomOfTop lineBoard idx)
+          guard (right == getLineLeftOfRight board lineBoard idx)
+          guard (bottom == getLineTopOfBottom board lineBoard idx)
+          guard (left == getLineRightOfLeft lineBoard idx)
           iter (putLines lineBoard idx top right bottom left) idxs
 
 -- 問題
