@@ -77,62 +77,46 @@ checkLineIntegrity lineBoard (x, y) =
         check (_, (-1)) = True
         check (x', y') = getLineCnt lineBoard (x', y') <= getNum lineBoard (x' ,y')
 
--- 引いたラインが結合したかをチェックする
-checkLineLinked :: LineBoard -> Position -> Bool
-checkLineLinked board (x, y) = (sum $ map f makeIdx) == 2
-  where makeIdx = 
-          if even y then [(x'',y'')|(x'',y'')<-[(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board]
-          else [(x'',y'')|(x'',y'')<-[(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)],x+x''>=0,x+x''<getWidth board,y+y''>=0,y+y''<getHeight board]
-        f (x', y') = getNum board ((x + x'), (y + y'))
+-- ラインを引けるか
+allowLines board lineBoard (x, y) top right bottom left =
+  allowLine board (x, y) top right bottom left &&
+  allowLineTop board lineBoard (x, y) top &&
+  allowLineRight board lineBoard (x, y) right &&
+  allowLineBottom board lineBoard (x, y) bottom &&
+  allowLineLeft board lineBoard (x, y) left
+
+-- ラインを引けるか(this)
+allowLine board (x, y) top right bottom left =
+  s < 4 && (getNum board (x, y) == s || getNum board (x, y) == 9)
+  where s = sum[top, right, bottom, left]
+
+-- ラインを引けるか(top)
+allowLineTop board lineBoard (x, y) top = True
+
+-- ラインを引けるか(right)
+allowLineRight board lineBoard (x, y) right = True
+
+-- ラインを引けるか(bottom)
+allowLineBottom board lineBoard (x, y) bottom = True
+
+-- ラインを引けるか(left)
+allowLineLeft board lineBoard (x, y) left = True
+
+-- ラインを引く
+putLines board lineBoard (x, y) top right bottom left = lineBoard
 
 -- 解法
 --solver :: Board -> LineBoard
--- 1.初期ラインボードを作成する
--- 2.最初の数字の場所を取得する
--- 3.仮のラインを引く
---    →引けるラインがなければ失敗なので前のラインに戻る
--- 4.整合性チェック
---    →Falseならば3へ戻る
--- 5.結合チェック
---    →Trueならば6を実行
--- 6.全数字に対して線が引かれているかチェック
---    →Trueならば回答する
---    →Falseならば次のラインを引く(3)
-solver board = solve1 (getInitLineBoard board)
-  where solve1 lineBoard = solve2 lineBoard (getFirstNumPosition lineBoard)
-        solve2 lineBoard (x, y) = solve3 lineBoard (x, y) (makeIdx lineBoard)
-        solve3 lineBoard (x, y) ((x', y'):idx) = do
-          print "lineBoard:"
-          print lineBoard
-          let targetX = x + x'
-              targetY = y + y'
-              tmpLineBoard = putLine lineBoard (targetX, targetY)
-          print "targetX:"
-          print targetX
-          print "targetY:"
-          print targetY
-          print "tmpLineBoard:"
-          print tmpLineBoard
-          guard (targetX >= 0)
-          print "targetX >= 0"
-          guard (targetY >= 0)
-          print "targetY >= 0"
-          guard (targetX < getWidth lineBoard)
-          print "targetX < getWidth lineBoard"
-          guard (targetY < getWidth lineBoard)
-          print "targetY < getWidth lineBoard"
-          guard (lineBoard !! targetY !! targetX == 0)
-          print "lineBoard !! targetY !! targetX == 0"
-          guard (checkLineIntegrity tmpLineBoard (targetX, targetY))
-          print "checkLineIntegrity tmpLineBoard (targetX, targetY)"
-          guard (not $ checkLineLinked tmpLineBoard (targetX, targetY))
-          print "not $ checkLineLinked tmpLineBoard (targetX, targetY)"
-          if checkAllNumSatisfied board tmpLineBoard then return tmpLineBoard
-          else solve3 tmpLineBoard (targetX, targetY) (makeTmpIdx targetY)
-        makeIdx lineBoard = [(x, y) | x <- [0..getWidth lineBoard], y <- [0..getHeight lineBoard]]
-        makeTmpIdx y = 
-          if even y then [(1,-1), (2,0), (1, 1), (-1,1), (-2, 0), (-1,-1)]
-          else [(0,-2), (1,-1), (1,1), (0,2), (-1,1), (-1,-1)]
+solver board = iter board (getInitLineBoard board) (makeIdx board)
+  where makeIdx board = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
+        iter board lineBoard [] = return lineBoard
+        iter board lineBoard ((x, y) : idx) = do
+          top <- [0, 1]
+          right <- [0, 1]
+          bottom <- [0, 1]
+          left <- [0, 1]
+          guard (allowLines board lineBoard (x, y) top right bottom left)
+          iter board (putLines board lineBoard (x, y) top right bottom left) idx
 
 -- 問題
 q00 :: Board
