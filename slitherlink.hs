@@ -100,8 +100,8 @@ solver board = iter initLineBoard positions
               n = getNum board p
           guard (s < 4)
           guard (n == s || n == blank)
-          guard (x == 0 || top == getLineBottomOfTop lineBoard p)
-          guard (y == 0 || left == getLineRightOfLeft lineBoard p)
+          guard (y == 0 || top == getLineBottomOfTop lineBoard p)
+          guard (x == 0 || left == getLineRightOfLeft lineBoard p)
           iter (putLines lineBoard p top right bottom left) ps
 
 -- 問題
