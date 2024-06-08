@@ -27,23 +27,8 @@ getInitLineBoard board = makeYs board
         makeXs [] = []
         makeXs (x:xs) = 0 : x : 0 : makeXs xs
         makeYs [] = []
-        makeYs (x:xs) = (replicate width 0) : makeXs x : (replicate width 0) : makeYs xs
-
--- ラインを引く
-putLine :: LineBoard -> Position -> Int -> LineBoard
-putLine board (x, y) l = subst board y $ subst (board !! y) x l
-  where subst [] _ _ = []
-        subst (x:xs) 0 m = m : xs
-        subst (x:xs) n m = x : subst xs (n - 1) m
-
--- ラインを引く
-putLines :: LineBoard -> Position -> Int -> Int -> Int -> Int -> LineBoard
-putLines lineBoard (x, y) top right bottom left =
-  putLineTop $ putLineRight $ putLineBottom $ putLineLeft lineBoard
-  where putLineTop lineBoard = putLine lineBoard (x*3+1, y*3) top
-        putLineRight lineBoard = putLine lineBoard (x*3+2, y*3+1) right
-        putLineBottom lineBoard = putLine lineBoard (x*3+1, y*3+2) bottom
-        putLineLeft lineBoard = putLine lineBoard (x*3, y*3+1) left
+        makeYs (x:xs) = repWith0 : makeXs x : repWith0 : makeYs xs
+        repWith0 = replicate width 0
 
 -- 数字を取得する
 getNum :: Board -> Position -> Int
@@ -78,42 +63,46 @@ getLineBottomOfTop :: LineBoard -> Position -> Int
 getLineBottomOfTop lineBoard (x, 0) = getLineTop lineBoard (x, 0)
 getLineBottomOfTop lineBoard (x, y) = getLineBottom lineBoard (x, y-1)
 
--- ラインを取得する(rightのleft)
-getLineLeftOfRight :: Board -> LineBoard -> Position -> Int
-getLineLeftOfRight board lineBoard (x, y) =
-  if getWidth board - 1 == x then getLineRight lineBoard (x, y)
-  else getLineLeft lineBoard (x+1, y)
-
--- ラインを取得する(bottomのtop)
-getLineTopOfBottom :: Board -> LineBoard -> Position -> Int
-getLineTopOfBottom board lineBoard (x, y) =
-  if getHeight board - 1 == y then getLineBottom lineBoard (x, y)
-  else getLineTop lineBoard (x, y+1)
-
 -- ラインを取得する(leftのright)
 getLineRightOfLeft :: LineBoard -> Position -> Int
 getLineRightOfLeft lineBoard (0, y) = getLineLeft lineBoard (0, y)
 getLineRightOfLeft lineBoard (x, y) = getLineRight lineBoard (x-1, y)
 
+-- ラインを引く(個別)
+putLine :: LineBoard -> Position -> Int -> LineBoard
+putLine board (x, y) l = subst board y $ subst (board !! y) x l
+  where subst [] _ _ = []
+        subst (x:xs) 0 m = m : xs
+        subst (x:xs) n m = x : subst xs (n - 1) m
+
+-- ラインを引く
+putLines :: LineBoard -> Position -> Int -> Int -> Int -> Int -> LineBoard
+putLines lineBoard (x, y) top right bottom left =
+  putLineTop $ putLineRight $ putLineBottom $ putLineLeft lineBoard
+  where putLineTop lineBoard = putLine lineBoard (x*3+1, y*3) top
+        putLineRight lineBoard = putLine lineBoard (x*3+2, y*3+1) right
+        putLineBottom lineBoard = putLine lineBoard (x*3+1, y*3+2) bottom
+        putLineLeft lineBoard = putLine lineBoard (x*3, y*3+1) left
+
 -- 解法
 solver :: Board -> [LineBoard]
-solver board = iter initLineBoard makeIdx
+solver board = iter initLineBoard positions
   where initLineBoard = getInitLineBoard board
-        makeIdx = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
+        positions = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
         iter lineBoard [] = return lineBoard
-        iter lineBoard (idx : idxs) = do
+        iter lineBoard ((x, y) : ps) = do
           top <- [0, 1]
           right <- [0, 1]
           bottom <- [0, 1]
           left <- [0, 1]
-          let s = sum[top, right, bottom, left]
+          let p = (x, y)
+              s = sum[top, right, bottom, left]
+              n = getNum board p
           guard (s < 4)
-          guard (s == getNum board idx || getNum board idx == blank)
-          guard (top == getLineBottomOfTop lineBoard idx)
-          guard (right == getLineLeftOfRight board lineBoard idx)
-          guard (bottom == getLineTopOfBottom board lineBoard idx)
-          guard (left == getLineRightOfLeft lineBoard idx)
-          iter (putLines lineBoard idx top right bottom left) idxs
+          guard (n == s || n == blank)
+          guard (x == 0 || top == getLineBottomOfTop lineBoard p)
+          guard (y == 0 || left == getLineRightOfLeft lineBoard p)
+          iter (putLines lineBoard p top right bottom left) ps
 
 -- 問題
 q00 :: Board
