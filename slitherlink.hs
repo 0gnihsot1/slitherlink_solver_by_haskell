@@ -106,6 +106,7 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
         expand (x:xs) = x ++ expand xs
 
 -- 先の視点を取得
+getStartPoint :: LBoard -> Position -> [Position]
 getStartPoint lBoard (x, y) =
   if getNum lBoard topP == 1 then [(x'-1,y'-1), (x'+1,y'-1)]
   else if getNum lBoard rightP == 1 then [(x'+1,y'-1), (x'+1,y'+1)]
