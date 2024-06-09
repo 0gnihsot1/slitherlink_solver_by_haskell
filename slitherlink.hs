@@ -3,8 +3,10 @@ import Control.Monad
 
 -- 盤面
 type Board = [[Int]]
--- ラインの盤面
+-- ラインボード
 type LineBoard = [[Int]]
+-- ラインボード(thin)
+type LBoard = [[Int]]
 -- ポジション
 type Position = (Int, Int)
 
@@ -23,7 +25,6 @@ getHeight board = length board
 getInitLineBoard :: Board -> LineBoard
 getInitLineBoard board = makeYs board
   where width = (getWidth board) * 3
-        height = (getHeight board) * 3
         makeXs [] = []
         makeXs (x:xs) = 0 : x : 0 : makeXs xs
         makeYs [] = []
@@ -84,12 +85,49 @@ putLines lineBoard (x, y) top right bottom left =
         putLineBottom lineBoard = putLine lineBoard (x*3+1, y*3+2) bottom
         putLineLeft lineBoard = putLine lineBoard (x*3, y*3+1) left
 
+-- ラインボードを間引きする
+thinLineBoard :: LineBoard -> LBoard
+thinLineBoard lineBoard = makeYs lineBoard
+  where makeXs (x1:x2:x3:xs) =
+          if null xs then [x1, x2, x3]
+          else x1 : x2 : makeXs xs
+        makeYs (x1:x2:x3:xs) =
+          if null xs then [makeXs x1, makeXs x2, makeXs x3]
+          else makeXs x1 : makeXs x2 : makeYs xs
+
+-- 最初の数字の場所を取得する
+getFirstNumPosition :: Board -> Position
+getFirstNumPosition board = (pos `mod` width, pos `div` height)
+  where pos = length $ takeWhile checkEnable (expand board)
+        checkEnable = \x -> x == blank || x == 0
+        width = getWidth board
+        height = getHeight board
+        expand [] = []
+        expand (x:xs) = x ++ expand xs
+
+-- 先の視点を取得
+getStartPoint lBoard (x, y) =
+  if getNum lBoard topP == 1 then [(x'-1,y'-1), (x'+1,y'-1)]
+  else if getNum lBoard rightP == 1 then [(x'+1,y'-1), (x'+1,y'+1)]
+  else if getNum lBoard bottomP == 1 then [(x'+1,y'+1), (x'-1,x'+1)]
+  else [(x'-1,y'+1), (x'-1,y'-1)]
+  where x' = x*2+1
+        y' = y*2+1
+        topP = (x',y'-1)
+        rightP = (x'+1,y')
+        bottomP = (x',y'+1)
+        leftP = (x'-1,y')
+
 -- 解法
 solver :: Board -> [LineBoard]
 solver board = iter initLineBoard positions
   where initLineBoard = getInitLineBoard board
         positions = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
-        iter lineBoard [] = return lineBoard
+        iter lineBoard [] = do
+          let lBoard = thinLineBoard lineBoard
+              firstP = getFirstNumPosition board
+          (d, d') <- getStartPoint lBoard firstP
+          return lBoard
         iter lineBoard ((x, y) : ps) = do
           top <- [0, 1]
           right <- [0, 1]
