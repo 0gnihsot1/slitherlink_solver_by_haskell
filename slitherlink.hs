@@ -92,12 +92,12 @@ putLines lineBoard (x, y) top right bottom left =
 -- ラインボードを間引きする
 thinLineBoard :: LineBoard -> LBoard
 thinLineBoard lineBoard = makeYs lineBoard
-  where makeXs (x1:x2:x3:xs) =
-          if null xs then [x1, x2, x3]
-          else x1 : x2 : makeXs xs
-        makeYs (x1:x2:x3:xs) =
-          if null xs then [makeXs x1, makeXs x2, makeXs x3]
-          else makeXs x1 : makeXs x2 : makeYs xs
+  where makeXs (x1:x2:x3:xs)
+          | null xs = [x1, x2, x3]
+          | otherwise = x1 : x2 : makeXs xs
+        makeYs (x1:x2:x3:xs)
+          | null xs = [makeXs x1, makeXs x2, makeXs x3]
+          | otherwise = makeXs x1 : makeXs x2 : makeYs xs
 
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> Position
@@ -111,11 +111,11 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
 
 -- 線の始点を取得
 getStartPoint :: LBoard -> Position -> (Position, Position)
-getStartPoint lBoard position@(x, y) =
-  if getNum lBoard topP == 1 then ((x'-1,y'-1), (x'+1,y'-1))
-  else if getNum lBoard rightP == 1 then ((x'+1,y'-1), (x'+1,y'+1))
-  else if getNum lBoard bottomP == 1 then ((x'+1,y'+1), (x'-1,x'+1))
-  else ((x'-1,y'+1), (x'-1,y'-1))
+getStartPoint lBoard position@(x, y)
+  | getNum lBoard topP == 1 = ((x'-1,y'-1), (x'+1,y'-1))
+  | getNum lBoard rightP == 1 = ((x'+1,y'-1), (x'+1,y'+1))
+  | getNum lBoard bottomP == 1 = ((x'+1,y'+1), (x'-1,x'+1))
+  | otherwise = ((x'-1,y'+1), (x'-1,x'-1))
   where x' = x*2+1
         y' = y*2+1
         topP = (x',y'-1)
@@ -124,25 +124,22 @@ getStartPoint lBoard position@(x, y) =
         leftP = (x'-1,y')
 
 -- 線をなぞる
-traceLine lBoard prev@(px, py) cur@(x, y) ds =
-  if next `elem` ds then True
-  else if next == (-1, -1) then False
-  else traceLine lBoard cur next (ds ++ [cur])
+traceLine lBoard prev@(px, py) cur@(x, y) ds
+  | next `elem` ds = True
+  | next == (-1, -1) = False
+  | otherwise = traceLine lBoard cur next (ds ++ [cur])
   where top@(topX, topY) = (x, y-1)
         right@(rightX, rightY) = (x+1, y)
         bottom@(bottomX, bottomY) = (x, y+1)
         left@(leftX, leftY) = (x-1, y)
         width = getWidth lBoard
         height = getHeight lBoard
-        next = if top /= prev && topY >= 0 && getNum lBoard top == line
-                 then (topX, topY-1)
-               else if right /= prev && rightX < width && getNum lBoard right == line
-                 then (rightX+1, rightY)
-               else if bottom /= prev && bottomX < height && getNum lBoard bottom == line
-                 then (bottomX, bottomY+1)
-               else if left /= prev && leftX >= 0 && getNum lBoard left == line
-                 then (leftX-1, leftY)
-               else (-1,-1)
+        next
+          | top /= prev && topY >= 0 && getNum lBoard top == line = (topX, topY-1)
+          | right /= prev && rightX < width && getNum lBoard right == line = (rightX+1, rightY)
+          | bottom /= prev && bottomX < height && getNum lBoard bottom == line = (bottomX, bottomY+1)
+          | left /= prev && leftX >= 0 && getNum lBoard left == line = (leftX-1, leftY)
+          | otherwise = (-1, -1)
 
 -- 解法
 solver :: Board -> [LineBoard]
