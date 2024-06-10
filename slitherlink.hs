@@ -10,6 +10,10 @@ type LBoard = [[Int]]
 -- ポジション
 type Position = (Int, Int)
 
+-- ライン無
+notLine = 0
+-- ライン有
+line = 1
 -- 空白
 blank = 9
 
@@ -33,29 +37,29 @@ getInitLineBoard board = makeYs board
 
 -- 数字を取得する
 getNum :: Board -> Position -> Int
-getNum board (x, y) = board !! y !! x
+getNum board position@(x, y) = board !! y !! x
 
 -- ラインを取得する(top)
 getLineTop :: LineBoard -> Position -> Int
-getLineTop lineBoard (x, y) = getNum lineBoard (x', y')
+getLineTop lineBoard position@(x, y) = getNum lineBoard (x', y')
   where x' = x*3+1
         y' = y*3
 
 -- ラインを取得する(right)
 getLineRight :: LineBoard -> Position -> Int
-getLineRight lineBoard (x, y) = getNum lineBoard (x', y')
+getLineRight lineBoard position@(x, y) = getNum lineBoard (x', y')
   where x' = x*3+2
         y' = y*3+1
 
 -- ラインを取得する(bottom)
 getLineBottom :: LineBoard -> Position -> Int
-getLineBottom lineBoard (x, y) = getNum lineBoard (x', y')
+getLineBottom lineBoard position@(x, y) = getNum lineBoard (x', y')
   where x' = x*3+1
         y' = y*3+2
 
 -- ラインを取得する(left)
 getLineLeft :: LineBoard -> Position -> Int
-getLineLeft lineBoard (x, y) = getNum lineBoard (x', y')
+getLineLeft lineBoard position@(x, y) = getNum lineBoard (x', y')
   where x' = x*3
         y' = y*3+1
 
@@ -71,7 +75,7 @@ getLineRightOfLeft lineBoard (x, y) = getLineRight lineBoard (x-1, y)
 
 -- ラインを引く(個別)
 putLine :: LineBoard -> Position -> Int -> LineBoard
-putLine board (x, y) l = subst board y $ subst (board !! y) x l
+putLine board position@(x, y) l = subst board y $ subst (board !! y) x l
   where subst [] _ _ = []
         subst (x:xs) 0 m = m : xs
         subst (x:xs) n m = x : subst xs (n - 1) m
@@ -107,7 +111,7 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
 
 -- 線の始点を取得
 getStartPoint :: LBoard -> Position -> (Position, Position)
-getStartPoint lBoard (x, y) =
+getStartPoint lBoard position@(x, y) =
   if getNum lBoard topP == 1 then ((x'-1,y'-1), (x'+1,y'-1))
   else if getNum lBoard rightP == 1 then ((x'+1,y'-1), (x'+1,y'+1))
   else if getNum lBoard bottomP == 1 then ((x'+1,y'+1), (x'-1,x'+1))
@@ -119,34 +123,56 @@ getStartPoint lBoard (x, y) =
         bottomP = (x',y'+1)
         leftP = (x'-1,y')
 
+-- 線をなぞる
+traceLine lBoard prev@(px, py) cur@(x, y) ds =
+  if next `elem` ds then True
+  else if next == (-1, -1) then False
+  else traceLine lBoard cur next (ds ++ [cur])
+  where top@(topX, topY) = (x, y-1)
+        right@(rightX, rightY) = (x+1, y)
+        bottom@(bottomX, bottomY) = (x, y+1)
+        left@(leftX, leftY) = (x-1, y)
+        width = getWidth lBoard
+        height = getHeight lBoard
+        next = if top /= prev && topY >= 0 && getNum lBoard top == line
+                 then (topX, topY-1)
+               else if right /= prev && rightX < width && getNum lBoard right == line
+                 then (rightX+1, rightY)
+               else if bottom /= prev && bottomX < height && getNum lBoard bottom == line
+                 then (bottomX, bottomY+1)
+               else if left /= prev && leftX >= 0 && getNum lBoard left == line
+                 then (leftX-1, leftY)
+               else (-1,-1)
+
 -- 解法
 solver :: Board -> [LineBoard]
 solver board = iter initLineBoard positions
   where initLineBoard = getInitLineBoard board
         positions = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
-        iter lineBoard [] = do
-          let lBoard = thinLineBoard lineBoard
-              firstP = getFirstNumPosition board
-              (d, d') = getStartPoint lBoard firstP
-          return lBoard
         iter lineBoard ((x, y) : ps) = do
           let p = (x, y)
               n = getNum board p
-          top <- [0, 1]
-          right <- [0, 1]
-          bottom <- [0, 1]
-          left <- [0, 1]
+          top <- [notLine, line]
+          right <- [notLine, line]
+          bottom <- [notLine, line]
+          left <- [notLine, line]
           let s = sum[top, right, bottom, left]
           guard (s < 4)
           guard (n == s || n == blank)
           guard (y == 0 || top == getLineBottomOfTop lineBoard p)
           guard (x == 0 || left == getLineRightOfLeft lineBoard p)
           iter (putLines lineBoard p top right bottom left) ps
+        iter lineBoard [] = do
+          let lBoard = thinLineBoard lineBoard
+              firstP = getFirstNumPosition board
+              (cur, next) = getStartPoint lBoard firstP
+          guard (traceLine lBoard cur next [cur])
+          return lBoard
 
 -- 問題
 q00 :: Board
-q00 = [[9,3,9],
-       [0,9,1]]
+q00 = [[1,3,3],
+       [0,1,1]]
 
 q01 :: Board
 q01 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
