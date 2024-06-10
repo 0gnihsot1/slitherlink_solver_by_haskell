@@ -105,13 +105,13 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
         expand [] = []
         expand (x:xs) = x ++ expand xs
 
--- 先の視点を取得
-getStartPoint :: LBoard -> Position -> [Position]
+-- 線の始点を取得
+getStartPoint :: LBoard -> Position -> (Position, Position)
 getStartPoint lBoard (x, y) =
-  if getNum lBoard topP == 1 then [(x'-1,y'-1), (x'+1,y'-1)]
-  else if getNum lBoard rightP == 1 then [(x'+1,y'-1), (x'+1,y'+1)]
-  else if getNum lBoard bottomP == 1 then [(x'+1,y'+1), (x'-1,x'+1)]
-  else [(x'-1,y'+1), (x'-1,y'-1)]
+  if getNum lBoard topP == 1 then ((x'-1,y'-1), (x'+1,y'-1))
+  else if getNum lBoard rightP == 1 then ((x'+1,y'-1), (x'+1,y'+1))
+  else if getNum lBoard bottomP == 1 then ((x'+1,y'+1), (x'-1,x'+1))
+  else ((x'-1,y'+1), (x'-1,y'-1))
   where x' = x*2+1
         y' = y*2+1
         topP = (x',y'-1)
@@ -127,16 +127,16 @@ solver board = iter initLineBoard positions
         iter lineBoard [] = do
           let lBoard = thinLineBoard lineBoard
               firstP = getFirstNumPosition board
-          (d, d') <- getStartPoint lBoard firstP
+              (d, d') = getStartPoint lBoard firstP
           return lBoard
         iter lineBoard ((x, y) : ps) = do
+          let p = (x, y)
+              n = getNum board p
           top <- [0, 1]
           right <- [0, 1]
           bottom <- [0, 1]
           left <- [0, 1]
-          let p = (x, y)
-              s = sum[top, right, bottom, left]
-              n = getNum board p
+          let s = sum[top, right, bottom, left]
           guard (s < 4)
           guard (n == s || n == blank)
           guard (y == 0 || top == getLineBottomOfTop lineBoard p)
