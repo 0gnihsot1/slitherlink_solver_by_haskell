@@ -110,12 +110,12 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
         expand (x:xs) = x ++ expand xs
 
 -- 線の始点を取得
-getStartPoint :: LBoard -> Position -> (Position, Position)
+getStartPoint :: LBoard -> Position -> (Position, Position, Position)
 getStartPoint lBoard position@(x, y)
-  | getNum lBoard topP == 1 = ((x'-1,y'-1), (x'+1,y'-1))
-  | getNum lBoard rightP == 1 = ((x'+1,y'-1), (x'+1,y'+1))
-  | getNum lBoard bottomP == 1 = ((x'+1,y'+1), (x'-1,x'+1))
-  | otherwise = ((x'-1,y'+1), (x'-1,x'-1))
+  | getNum lBoard topP == 1 = ((x'-1,y'-1), (x',y'-1), (x'+1,y'-1))
+  | getNum lBoard rightP == 1 = ((x'+1,y'-1), (x'+1,y'), (x'+1,y'+1))
+  | getNum lBoard bottomP == 1 = ((x'+1,y'+1), (x',y'+1), (x'-1,y'+1))
+  | otherwise = ((x'-1,y'+1), (x'-1,y'), (x'-1,y'-1))
   where x' = x*2+1
         y' = y*2+1
         topP = (x',y'-1)
@@ -124,22 +124,25 @@ getStartPoint lBoard position@(x, y)
         leftP = (x'-1,y')
 
 -- 線をなぞる
-traceLine lBoard prev@(px, py) cur@(x, y) ds
+traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) ds
   | next `elem` ds = True
   | next == (-1, -1) = False
-  | otherwise = traceLine lBoard cur next (ds ++ [cur])
-  where top@(topX, topY) = (x, y-1)
-        right@(rightX, rightY) = (x+1, y)
-        bottom@(bottomX, bottomY) = (x, y+1)
-        left@(leftX, leftY) = (x-1, y)
+  | otherwise = traceLine lBoard cur (getHalfPosition cur next) next (ds ++ [cur])
+  where top@(tx, ty) = (cx, cy-1)
+        right@(rx, ry) = (cx+1, cy)
+        bottom@(bx, by) = (cx, cy+1)
+        left@(lx, ly) = (cx-1, cy)
         width = getWidth lBoard
         height = getHeight lBoard
         next
-          | top /= prev && topY >= 0 && getNum lBoard top == line = (topX, topY-1)
-          | right /= prev && rightX < width && getNum lBoard right == line = (rightX+1, rightY)
-          | bottom /= prev && bottomX < height && getNum lBoard bottom == line = (bottomX, bottomY+1)
-          | left /= prev && leftX >= 0 && getNum lBoard left == line = (leftX-1, leftY)
+          | top /= lineP && ty >= 0 && getNum lBoard top == line = (tx, ty-1)
+          | right /= lineP && rx < width && getNum lBoard right == line = (rx+1, ry)
+          | bottom /= lineP && bx < height && getNum lBoard bottom == line = (bx, by+1)
+          | left /= lineP && lx >= 0 && getNum lBoard left == line = (lx-1, ly)
           | otherwise = (-1, -1)
+
+-- 点の中間を取得する
+getHalfPosition from@(fx, fy) to@(tx, ty) = ((fx+tx) `div` 2, (fy+ty) `div` 2)
 
 -- 解法
 solver :: Board -> [LineBoard]
@@ -162,8 +165,8 @@ solver board = iter initLineBoard positions
         iter lineBoard [] = do
           let lBoard = thinLineBoard lineBoard
               firstP = getFirstNumPosition board
-              (cur, next) = getStartPoint lBoard firstP
-          guard (traceLine lBoard cur next [cur])
+              (cur, lineP, next) = getStartPoint lBoard firstP
+          guard (traceLine lBoard cur lineP next [cur])
           return lBoard
 
 -- 問題
