@@ -124,8 +124,9 @@ getStartPoint lBoard position@(x, y)
         leftP = (x'-1,y')
 
 -- 線をなぞる
+traceLine :: LBoard -> Position -> Position -> Position -> [Position] -> Bool
 traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) ds
-  | next `elem` ds = True
+  | next `elem` ds = getLinkCnt lBoard == length(ds ++ [cur])
   | next == (-1, -1) = False
   | otherwise = traceLine lBoard cur (getHalfPosition cur next) next (ds ++ [cur])
   where top@(tx, ty) = (cx, cy-1)
@@ -137,12 +138,23 @@ traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) ds
         next
           | top /= lineP && ty >= 0 && getNum lBoard top == line = (tx, ty-1)
           | right /= lineP && rx < width && getNum lBoard right == line = (rx+1, ry)
-          | bottom /= lineP && bx < height && getNum lBoard bottom == line = (bx, by+1)
+          | bottom /= lineP && by < height && getNum lBoard bottom == line = (bx, by+1)
           | left /= lineP && lx >= 0 && getNum lBoard left == line = (lx-1, ly)
           | otherwise = (-1, -1)
 
 -- 点の中間を取得する
+getHalfPosition :: Position -> Position -> Position
 getHalfPosition from@(fx, fy) to@(tx, ty) = ((fx+tx) `div` 2, (fy+ty) `div` 2)
+
+-- 展開する
+expand [] = []
+expand (x:xs) = x ++ (expand xs)
+
+-- 先の数を取得する
+getLinkCnt lBoard = iter (expand lBoard) False
+  where iter [] _ = 0
+        iter (x:xs) True = x + (iter xs False)
+        iter (x:xs) False = iter xs True
 
 -- 解法
 solver :: Board -> [LineBoard]
@@ -171,8 +183,8 @@ solver board = iter initLineBoard positions
 
 -- 問題
 q00 :: Board
-q00 = [[1,3,3],
-       [0,1,1]]
+q00 = [[9,3,9],
+       [0,9,1]]
 
 q01 :: Board
 q01 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
