@@ -37,29 +37,29 @@ getInitLineBoard board = makeYs board
 
 -- 数字を取得する
 getNum :: Board -> Position -> Int
-getNum board position@(x, y) = board !! y !! x
+getNum board (x, y) = board !! y !! x
 
 -- ラインを取得する(top)
 getLineTop :: LineBoard -> Position -> Int
-getLineTop lineBoard position@(x, y) = getNum lineBoard (x', y')
+getLineTop lineBoard (x, y) = getNum lineBoard (x', y')
   where x' = x*3+1
         y' = y*3
 
 -- ラインを取得する(right)
 getLineRight :: LineBoard -> Position -> Int
-getLineRight lineBoard position@(x, y) = getNum lineBoard (x', y')
+getLineRight lineBoard (x, y) = getNum lineBoard (x', y')
   where x' = x*3+2
         y' = y*3+1
 
 -- ラインを取得する(bottom)
 getLineBottom :: LineBoard -> Position -> Int
-getLineBottom lineBoard position@(x, y) = getNum lineBoard (x', y')
+getLineBottom lineBoard (x, y) = getNum lineBoard (x', y')
   where x' = x*3+1
         y' = y*3+2
 
 -- ラインを取得する(left)
 getLineLeft :: LineBoard -> Position -> Int
-getLineLeft lineBoard position@(x, y) = getNum lineBoard (x', y')
+getLineLeft lineBoard (x, y) = getNum lineBoard (x', y')
   where x' = x*3
         y' = y*3+1
 
@@ -75,12 +75,12 @@ getLineRightOfLeft lineBoard (x, y) = getLineRight lineBoard (x-1, y)
 
 -- ラインを引く(個別)
 putLine :: LineBoard -> Position -> Int -> LineBoard
-putLine board position@(x, y) l = subst board y $ subst (board !! y) x l
+putLine board (x, y) l = subst board y $ subst (board !! y) x l
   where subst [] _ _ = []
         subst (x:xs) 0 m = m : xs
         subst (x:xs) n m = x : subst xs (n - 1) m
 
--- ラインを引く
+-- ラインを引く(周囲)
 putLines :: LineBoard -> Position -> Int -> Int -> Int -> Int -> LineBoard
 putLines lineBoard (x, y) top right bottom left =
   putLineTop $ putLineRight $ putLineBottom $ putLineLeft lineBoard
@@ -111,7 +111,7 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
 
 -- 線の始点を取得
 getStartPoint :: LBoard -> Position -> (Position, Position, Position)
-getStartPoint lBoard position@(x, y)
+getStartPoint lBoard (x, y)
   | getNum lBoard topP == 1 = ((x'-1,y'-1), (x',y'-1), (x'+1,y'-1))
   | getNum lBoard rightP == 1 = ((x'+1,y'-1), (x'+1,y'), (x'+1,y'+1))
   | getNum lBoard bottomP == 1 = ((x'+1,y'+1), (x',y'+1), (x'-1,y'+1))
@@ -144,13 +144,15 @@ traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) ds
 
 -- 点の中間を取得する
 getHalfPosition :: Position -> Position -> Position
-getHalfPosition from@(fx, fy) to@(tx, ty) = ((fx+tx) `div` 2, (fy+ty) `div` 2)
+getHalfPosition (fx, fy) (tx, ty) = ((fx+tx) `div` 2, (fy+ty) `div` 2)
 
 -- 展開する
+expand :: [[Int]] -> [Int]
 expand [] = []
 expand (x:xs) = x ++ (expand xs)
 
 -- 先の数を取得する
+getLinkCnt :: LBoard -> Int
 getLinkCnt lBoard = iter (expand lBoard) False
   where iter [] _ = 0
         iter (x:xs) True = x + (iter xs False)
@@ -161,9 +163,8 @@ solver :: Board -> [LineBoard]
 solver board = iter initLineBoard positions
   where initLineBoard = getInitLineBoard board
         positions = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
-        iter lineBoard ((x, y) : ps) = do
-          let p = (x, y)
-              n = getNum board p
+        iter lineBoard (p@(x, y) : ps) = do
+          let n = getNum board p
           top <- [notLine, line]
           right <- [notLine, line]
           bottom <- [notLine, line]
