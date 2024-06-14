@@ -102,12 +102,10 @@ thinLineBoard lineBoard = makeYs lineBoard
 -- 最初の数字の場所を取得する
 getFirstNumPosition :: Board -> Position
 getFirstNumPosition board = (pos `mod` width, pos `div` height)
-  where pos = length $ takeWhile checkEnable (expand board)
+  where pos = length $ takeWhile checkEnable (concat board)
         checkEnable = \x -> x == blank || x == 0
         width = getWidth board
         height = getHeight board
-        expand [] = []
-        expand (x:xs) = x ++ expand xs
 
 -- 線の始点を取得
 getStartPoint :: LBoard -> Position -> (Position, Position, Position)
@@ -125,10 +123,10 @@ getStartPoint lBoard (x, y)
 
 -- 線をなぞる
 traceLine :: LBoard -> Position -> Position -> Position -> [Position] -> Bool
-traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) ds
-  | next `elem` ds = getLinkCnt lBoard == length(ds ++ [cur])
+traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) plist@(p:ps)
+  | next == p = getLinkCnt lBoard == length(plist ++ [cur])
   | next == (-1, -1) = False
-  | otherwise = traceLine lBoard cur (getHalfPosition cur next) next (ds ++ [cur])
+  | otherwise = traceLine lBoard cur (getHalfPosition cur next) next (plist ++ [cur])
   where top@(tx, ty) = (cx, cy-1)
         right@(rx, ry) = (cx+1, cy)
         bottom@(bx, by) = (cx, cy+1)
@@ -146,14 +144,9 @@ traceLine lBoard prev@(px, py) lineP@(x, y) cur@(cx, cy) ds
 getHalfPosition :: Position -> Position -> Position
 getHalfPosition (fx, fy) (tx, ty) = ((fx+tx) `div` 2, (fy+ty) `div` 2)
 
--- 展開する
-expand :: [[Int]] -> [Int]
-expand [] = []
-expand (x:xs) = x ++ (expand xs)
-
 -- 先の数を取得する
 getLinkCnt :: LBoard -> Int
-getLinkCnt lBoard = iter (expand lBoard) False
+getLinkCnt lBoard = iter (concat lBoard) False
   where iter [] _ = 0
         iter (x:xs) True = x + (iter xs False)
         iter (x:xs) False = iter xs True
@@ -182,10 +175,20 @@ solver board = iter initLineBoard positions
           guard (traceLine lBoard cur lineP next [cur])
           return lBoard
 
+main = do
+  print $ solver q00
+
 -- 問題
 q00 :: Board
 q00 = [[9,3,9],
        [0,9,1]]
+
+q05 :: Board
+q05 = [[9,3,9,9,0],
+       [3,9,9,1,9],
+       [9,9,9,9,9],
+       [9,3,9,9,0],
+       [2,9,9,3,9]]
 
 q01 :: Board
 q01 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
