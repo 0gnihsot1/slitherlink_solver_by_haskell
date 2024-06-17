@@ -7,6 +7,14 @@ type Board = [[Int]]
 type LineBoard = [[Int]]
 -- ポジション
 type Position = (Int, Int)
+-- ライン始点
+type FromP = Position
+-- ライン位置
+type LineP = Position
+-- ライン終点
+type ToP = Position
+-- ライン情報
+type LineInfo = (FromP, LineP, ToP)
 
 -- ライン無
 notLine = 0
@@ -27,11 +35,11 @@ getHeight board = length board
 getInitLineBoard :: Board -> LineBoard
 getInitLineBoard board = makeYs board
   where width = (getWidth board) * 2 + 1
-        makeXs [] = [notLine]
-        makeXs (x:xs) = notLine : x : makeXs xs
+        makeXs [] = [blank]
+        makeXs (x:xs) = blank : x : makeXs xs
         makeYs [] = [repWith0]
         makeYs (x:xs) = repWith0 : makeXs x : makeYs xs
-        repWith0 = replicate width notLine
+        repWith0 = replicate width blank
 
 -- 数字を取得する
 getNum :: Board -> Position -> Int
@@ -52,6 +60,13 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
         width = getWidth board
         height = getHeight board
 
+-- 数字の周りの線の数を取得する
+getLineCntAroundNum lBoard p@(x, y) = top + right + bottom + left
+  where top = getNum lBoard (x, y-1)
+        right = getNum lBoard (x+1, y)
+        bottom = getNum lBoard (x, y+1)
+        left = getNum lBoard (x-1, y)
+
 -- 解法
 solver :: Board -> [LineBoard]
 solver board = do
@@ -59,25 +74,28 @@ solver board = do
       firstP@(fx, fy) = getFirstNumPosition board
       width = getWidth lBoard
       height = getHeight lBoard
-  lPositions@(fromP, lineP@(x,y), toP) <- [((fx*2,fy*2), (fx*2+1,fy*2), (fx*2+2,fy*2)),
-                                           ((fx*2+1,fy*2), (fx*2+1,fy*2+1), (fx*2+1,fy*2+2)),
-                                           ((fx*2+2,fy*2+2), (fx*2+1,fy*2+2), (fx*2,fy*2+2)),
-                                           ((fx*2,fy*2+2), (fx*2,fy*2+1), (fx*2,fy*2))]
+  lPosition@(fromP, lineP@(x,y), toP) <- [((fx*2,fy*2), (fx*2+1,fy*2), (fx*2+2,fy*2)),
+                                          ((fx*2+1,fy*2), (fx*2+1,fy*2+1), (fx*2+1,fy*2+2)),
+                                          ((fx*2+2,fy*2+2), (fx*2+1,fy*2+2), (fx*2,fy*2+2)),
+                                          ((fx*2,fy*2+2), (fx*2,fy*2+1), (fx*2,fy*2))]
   guard (x >= 0 && x < width)
   guard (y >= 0 && y < height)
-  drawLine (putLine lBoard lineP) lPositions [lineP]
+  drawLine (putLine lBoard lineP) lPosition [lineP]
 
 -- 可能な限り線を引き続ける
-drawLine lBoard p@((fx, fy), (lx, ly), (tx, ty)) ps = do
+drawLine :: LineBoard -> LineInfo -> [Position] -> [LineBoard]
+drawLine lBoard p@((fx, fy), lineP@(lx, ly), (tx, ty)) ps = do
   let width = getWidth lBoard
       height = getHeight lBoard
-  lPositions@((fromP, lineP@(x,y), toP)) <- [((tx,ty), (tx+1,ty), (tx+2,ty)),
+  lPositions@((fromP, lineP'@(x,y), toP)) <- [((tx,ty), (tx+1,ty), (tx+2,ty)),
                                              ((tx,ty), (tx,ty+1), (tx,ty+2)),
                                              ((tx,ty), (tx-1,ty), (tx-2,ty)),
                                              ((tx,ty), (tx,ty-1), (tx,ty-2))]
   guard (x >= 0 && x < width)
   guard (y >= 0 && y < height)
-  return lBoard
+  guard (lineP /= lineP')
+  if lineP' `elem` ps then return lBoard
+  else drawLine (putLine lBoard lineP) lPositions (lineP':ps)
 
 main = do
   print $ solver q00
