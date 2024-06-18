@@ -61,6 +61,7 @@ getFirstNumPosition board = (pos `mod` width, pos `div` height)
         height = getHeight board
 
 -- 数字の周りの線の数を取得する
+getLineCntAroundNum :: LineBoard -> Position -> Int
 getLineCntAroundNum lBoard p@(x, y) = top + right + bottom + left
   where top = getNum lBoard (x, y-1)
         right = getNum lBoard (x+1, y)
