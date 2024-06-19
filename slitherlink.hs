@@ -111,15 +111,20 @@ getLinkCnt lBoard = iter (concat lBoard) False
         iter (x:xs) False = iter xs True
 
 -- 点の周りの線の数を取得する
-getLineCntArountDot lBoard (x, y) = getTop + getLeft
+getLineCntArountDot :: LineBoard -> Position -> Int
+getLineCntArountDot lBoard (x, y) = getTop + getRight + getBottom + getLeft
   where getTop
           | y == 0 = 0
-          | y == getHeight lBoard - 1 = 0
           | otherwise = getNum lBoard (x, y-1)
-        getLeft
-          | x == 0 = 0
+        getRight
           | x == getWidth lBoard - 1 = 0
           | otherwise = getNum lBoard (x+1, y)
+        getBottom
+          | y == getHeight lBoard - 1 = 0
+          | otherwise = getNum lBoard (x, y+1)
+        getLeft
+          | x == 0 = 0
+          | otherwise = getNum lBoard (x-1, y)
 
 -- 解法
 solver :: Board -> [LineBoard]
@@ -136,10 +141,14 @@ solver board = iter (getInitLineBoard board) positions
           guard (n == s || n == blank)
           guard (py == 0 || top == getLineTop lBoard p)
           guard (px == 0 || left == getLineLeft lBoard p)
-          guard (let val = top + right in if val >= line then getLineCntArountDot lBoard (px*2+2, py*2) + val < 3 else True)
-          guard (if bottom + left >= line then getLineCntArountDot lBoard (px*2, py*2+2) + bottom + left < 3 else True)
-          guard (if left + top >= line then getLineCntArountDot lBoard (px*2, py*2) + top + left < 3 else True)
-          iter (putLines lBoard p top right bottom left) ps
+          let newBoard = putLines lBoard p top right bottom left
+          guard (let val = top + right
+                 in val == notLine || getLineCntArountDot newBoard (px*2+2, py*2) < 3)
+          guard (let val = bottom + left
+                 in val == notLine || getLineCntArountDot newBoard (px*2, py*2+2) < 3)
+          guard (let val = left + top
+                 in val == notLine || getLineCntArountDot newBoard (px*2, py*2) < 3)
+          iter newBoard ps
         iter lBoard [] = do
           let (curP, lineP, nextP) = getStartPoint lBoard (getFirstNumPosition board)
           guard (traceLine lBoard lineP nextP [curP])
