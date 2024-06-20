@@ -17,21 +17,21 @@ blank = 9
 
 -- 盤面の横幅を取得する
 getWidth :: Board -> Int
-getWidth board = length (board !! 0)
+getWidth board = length (head board)
 
 -- 盤面の縦幅を取得する
 getHeight :: Board -> Int
-getHeight board = length board
+getHeight = length
 
 -- ラインの初期状態を取得する
 getInitLineBoard :: Board -> LineBoard
 getInitLineBoard board = makeYs board
-  where width = (getWidth board) * 2 + 1
-        makeXs [] = [0]
-        makeXs (x:xs) = 0 : x : makeXs xs
-        makeYs [] = [repWith0]
-        makeYs (x:xs) = repWith0 : makeXs x : makeYs xs
-        repWith0 = replicate width 0
+  where width = getWidth board * 2 + 1
+        makeXs [] = [notLine]
+        makeXs (x:xs) = notLine : x : makeXs xs
+        makeYs [] = [repWithNotLine]
+        makeYs (x:xs) = repWithNotLine : makeXs x : makeYs xs
+        repWithNotLine = replicate width notLine
 
 -- 数字を取得する
 getNum :: Board -> Position -> Int
@@ -65,7 +65,7 @@ putLines lBoard (x, y) top right bottom left =
 getFirstNumPosition :: Board -> Position
 getFirstNumPosition board = (pos `mod` width, pos `div` height)
   where pos = length $ takeWhile checkEnable (concat board)
-        checkEnable = \x -> x == blank || x == 0
+        checkEnable x = x == blank || x == 0
         width = getWidth board
         height = getHeight board
 
@@ -107,7 +107,7 @@ traceLine lBoard lineP@(x, y) curP@(cx, cy) plist@(p:ps)
 getLinkCnt :: LineBoard -> Int
 getLinkCnt lBoard = iter (concat lBoard) False
   where iter [] _ = 0
-        iter (x:xs) True = x + (iter xs False)
+        iter (x:xs) True = x + iter xs False
         iter (x:xs) False = iter xs True
 
 -- 点の周りの線の数を取得する
@@ -142,12 +142,9 @@ solver board = iter (getInitLineBoard board) positions
           guard (py == 0 || top == getLineTop lBoard p)
           guard (px == 0 || left == getLineLeft lBoard p)
           let newBoard = putLines lBoard p top right bottom left
-          guard (let val = top + right
-                 in val == notLine || getLineCntArountDot newBoard (px*2+2, py*2) < 3)
-          guard (let val = bottom + left
-                 in val == notLine || getLineCntArountDot newBoard (px*2, py*2+2) < 3)
-          guard (let val = left + top
-                 in val == notLine || getLineCntArountDot newBoard (px*2, py*2) < 3)
+          guard (getLineCntArountDot newBoard (px*2+2, py*2) < 3)
+          guard (getLineCntArountDot newBoard (px*2, py*2+2) < 3)
+          guard (even(getLineCntArountDot newBoard (px*2, py*2)))
           iter newBoard ps
         iter lBoard [] = do
           let (curP, lineP, nextP) = getStartPoint lBoard (getFirstNumPosition board)
