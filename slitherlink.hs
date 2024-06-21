@@ -1,5 +1,6 @@
 -- スリザーリンクを解く
 import Control.Monad
+import Data.Time
 
 -- 盤面
 type Board = [[Int]]
@@ -84,11 +85,11 @@ getStartPoint lBoard (x, y)
         leftP = (x'-1,y')
 
 -- 線をなぞる
-traceLine :: LineBoard -> Position -> Position -> [Position] -> Bool
-traceLine lBoard lineP@(x, y) curP@(cx, cy) plist@(p:ps)
+traceLine :: LineBoard -> Position -> Position -> Position -> Int -> Bool
+traceLine lBoard lineP@(x, y) curP@(cx, cy) firstP cnt
   | nextP == (-1, -1) = False
-  | nextP == p = getLinkCnt lBoard == length(plist ++ [curP])
-  | otherwise = traceLine lBoard (getHalfPosition curP nextP) nextP (plist ++ [curP])
+  | nextP == firstP = getLinkCnt lBoard == cnt + 1
+  | otherwise = traceLine lBoard (getHalfPosition curP nextP) nextP firstP (cnt+1)
   where top@(tx, ty) = (cx, cy-1)
         right@(rx, ry) = (cx+1, cy)
         bottom@(bx, by) = (cx, cy+1)
@@ -142,17 +143,21 @@ solver board = iter (getInitLineBoard board) positions
           guard (py == 0 || top == getLineTop lBoard p)
           guard (px == 0 || left == getLineLeft lBoard p)
           let newBoard = putLines lBoard p top right bottom left
-          guard (getLineCntArountDot newBoard (px*2+2, py*2) < 3)
-          guard (getLineCntArountDot newBoard (px*2, py*2+2) < 3)
-          guard (even(getLineCntArountDot newBoard (px*2, py*2)))
+          guard (let val = getLineCntArountDot newBoard (px*2+2, py*2) in val < 3)
+          guard (let val = getLineCntArountDot newBoard (px*2, py*2+2) in val < 3)
+          guard (let val = getLineCntArountDot newBoard (px*2, py*2) in val == 0 || val == 2)
           iter newBoard ps
         iter lBoard [] = do
           let (curP, lineP, nextP) = getStartPoint lBoard (getFirstNumPosition board)
-          guard (traceLine lBoard lineP nextP [curP])
+          guard (traceLine lBoard lineP nextP curP 1)
           return lBoard
 
 main = do
-  print $ solver q00
+  x <- getCurrentTime
+  print x
+  print $ solver q01
+  y <- getCurrentTime
+  print y
 
 -- 問題
 q00 :: Board
@@ -192,3 +197,16 @@ q01 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
        [3, 9, 9, 0, 9,  9, 1, 2, 9, 9],
        [3, 9, 9, 2, 9,  2, 9, 9, 3, 3],
        [9, 3, 1, 9, 9,  1, 9, 9, 9, 9]]
+
+r01 :: Board
+r01 = [[9,9,9,9,9, 9,9,2,3,1],
+       [9,9,9,9,0, 1,9,2,9,1],
+       [0,1,1,9,2, 2,9,1,3,1],
+       [2,9,2,9,9, 9,9,9,9,9],
+       [3,1,1,9,0, 9,9,2,2,9],
+       
+       [9,9,9,9,9, 1,9,1,0,9],
+       [9,9,1,1,9, 9,9,9,9,9],
+       [0,9,1,2,9, 1,2,0,9,9],
+       [9,9,9,9,9, 1,9,2,9,0],
+       [9,9,9,9,9, 2,2,2,9,1]]
