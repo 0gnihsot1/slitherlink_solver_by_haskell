@@ -138,14 +138,13 @@ solver board = iter (getInitLineBoard board) positions
           bottom <- [notLine, line]
           left <- [notLine, line]
           let s = top + right + bottom + left
-          guard (s < 4)
           guard (n == s || n == blank)
           guard (py == 0 || top == getLineTop lBoard p)
           guard (px == 0 || left == getLineLeft lBoard p)
           let newBoard = putLines lBoard p top right bottom left
           guard (let val = getLineCntArountDot newBoard (px*2+2, py*2) in val < 3)
           guard (let val = getLineCntArountDot newBoard (px*2, py*2+2) in val < 3)
-          guard (let val = getLineCntArountDot newBoard (px*2, py*2) in val == 0 || val == 2)
+          guard (let val = getLineCntArountDot newBoard (px*2, py*2) in even val)
           iter newBoard ps
         iter lBoard [] = do
           let (curP, lineP, nextP) = getStartPoint lBoard (getFirstNumPosition board)
@@ -155,28 +154,17 @@ solver board = iter (getInitLineBoard board) positions
 main = do
   x <- getCurrentTime
   print x
-  print $ solver q01
+  mapM_ (putStrLn.
+    unwords.
+    map show) (head $ solver r01)
   y <- getCurrentTime
   print y
 
 -- 問題
-q00 :: Board
-q00 = [[9,3,9],
-       [0,9,1]]
-
 q03 :: Board
 q03 = [[9,9,3],
        [1,9,9],
        [3,9,0]]
-
-q03l :: LineBoard
-q03l = [[0,1,0,1,0,1,0],
-        [1,9,0,9,0,3,1],
-        [0,0,0,0,0,1,0],
-        [1,1,0,9,1,9,0],
-        [0,0,0,1,0,0,0],
-        [1,3,1,9,0,0,0],
-        [0,1,0,0,0,0,0]]
 
 q05 :: Board
 q05 = [[9,3,9,9,0],
@@ -184,19 +172,6 @@ q05 = [[9,3,9,9,0],
        [9,9,9,9,9],
        [9,3,9,9,0],
        [2,9,9,3,9]]
-
-q01 :: Board
-q01 = [[9, 9, 9, 9, 2,  9, 9, 2, 1, 9],
-       [0, 3, 9, 9, 1,  9, 1, 9, 9, 0],
-       [9, 9, 2, 3, 9,  9, 0, 9, 9, 2],
-       [1, 9, 9, 9, 9,  9, 9, 3, 9, 9],
-       [0, 9, 9, 3, 3,  9, 9, 0, 9, 9],
-       
-       [9, 9, 2, 9, 9,  0, 3, 9, 9, 0],
-       [9, 9, 1, 9, 9,  9, 9, 9, 9, 2],
-       [3, 9, 9, 0, 9,  9, 1, 2, 9, 9],
-       [3, 9, 9, 2, 9,  2, 9, 9, 3, 3],
-       [9, 3, 1, 9, 9,  1, 9, 9, 9, 9]]
 
 r01 :: Board
 r01 = [[9,9,9,9,9, 9,9,2,3,1],
