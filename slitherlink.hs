@@ -173,11 +173,11 @@ replaceEvenRowsOddWithPipe rowIndex row
 
 -- 盤面を文字列に変換し、奇数行目の奇数個目を+に、1を-に、偶数行の奇数個目の1を|に置換する
 formatLineBoard :: LineBoard -> [[String]]
-formatLineBoard lBoard = zipWith (\i row -> if odd i then replaceOddRowsOddWithPlusMinus i row else replaceEvenRowsOddWithPipe i row) [1..] lBoard
+formatLineBoard = zipWith (\i row -> if odd i then replaceOddRowsOddWithPlusMinus i row else replaceEvenRowsOddWithPipe i row) [1..]
 
 -- 盤面を複数行に分割して表示する
 displayFormattedBoard :: LineBoard -> IO ()
-displayFormattedBoard lBoard = mapM_ putStrLn (map unwords (formatLineBoard lBoard))
+displayFormattedBoard lBoard = mapM_ (putStrLn . unwords) (formatLineBoard lBoard)
 
 -- main関数
 main :: IO ()
