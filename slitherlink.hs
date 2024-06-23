@@ -1,6 +1,5 @@
 -- スリザーリンクを解く
 import Control.Monad
-import Data.Time
 
 -- 盤面
 type Board = [[Int]]
