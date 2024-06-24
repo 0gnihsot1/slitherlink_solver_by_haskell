@@ -139,6 +139,7 @@ solver board = iter (getInitLineBoard board) positions
       bottom <- [notLine, line]
       left <- [notLine, line]
       let s = top + right + bottom + left
+      guard (s < 4)
       guard (n == s || n == blank)
       guard (py == 0 || top == getLineTop lBoard p)
       guard (px == 0 || left == getLineLeft lBoard p)
