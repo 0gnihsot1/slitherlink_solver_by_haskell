@@ -1,5 +1,5 @@
 # スリザーリンクソルバーHaskellプログラムです
-Haskellのバージョン:
+製造時のHaskellのバージョン:
 The Glorious Glasgow Haskell Compilation System, version 9.4.8
 
 Haskellの勉強のために作成しました。
@@ -33,9 +33,9 @@ $ ./slitherlink
 +   +   +   +   +   +   +   +   +   +   +
           1 | 2       1 | 2   0          
 +   +   +   + - +   +   + - +   +   +   +
-                |     1     | 2       0  
+                |     1     | 2          
 +   +   +   +   + - + - +   + - + - +   +
-                      2 | 2   2     | 0  
+                      2 | 2   2     | 1  
 +   +   +   +   +   +   + - + - + - +   +
 ```
 
