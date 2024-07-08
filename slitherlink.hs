@@ -1,6 +1,9 @@
 -- スリザーリンクを解く
 import Control.Monad
+import Data.Char (isDigit, digitToInt)
 
+-- 盤面(文字列)
+type StrBoard = [String]
 -- 盤面
 type Board = [[Int]]
 -- ラインボード
@@ -128,9 +131,10 @@ getLineCntArountDot lBoard (x, y) =
       | otherwise = lBoard !! y !! x
 
 -- 解法
-solver :: Board -> [LineBoard]
-solver board = iter (getInitLineBoard board) positions
+solver :: StrBoard -> [LineBoard]
+solver strBoard = iter (getInitLineBoard board) positions
   where
+    board = convertStringsToBoard strBoard
     positions = [(x, y) | x <- [0..getWidth board-1], y <- [0..getHeight board-1]]
     iter lBoard (p@(px, py) : ps) = do
       let n = getNum board p
@@ -179,6 +183,19 @@ formatLineBoard = zipWith (\i row -> if odd i then replaceOddRowsOddWithPlusMinu
 displayFormattedBoard :: LineBoard -> IO ()
 displayFormattedBoard lBoard = mapM_ (putStrLn . unwords) (formatLineBoard lBoard)
 
+-- 文字列を整数リストに変換する
+stringToIntList :: String -> [Int]
+stringToIntList = map charToInt
+  where
+    charToInt c
+      | isDigit c = digitToInt c
+      | c == ' '  = blank
+      | otherwise = error "Unexpected character"
+
+-- 文字列のリストを整数リストのリストに変換する
+convertStringsToBoard :: StrBoard -> Board
+convertStringsToBoard = map stringToIntList
+
 -- main関数
 main :: IO ()
 main = do
@@ -186,22 +203,21 @@ main = do
   displayFormattedBoard solution
 
 -- 問題
-q05 :: Board
-q05 = [[9,3,9,9,0],
-       [3,9,9,1,9],
-       [9,9,9,9,9],
-       [9,3,9,9,0],
-       [2,9,9,3,9]]
+q05 :: StrBoard
+q05 = [" 3  0",
+       "3  1 ",
+       "     ",
+       " 3  0",
+       "2  3 "]
 
-q10 :: Board
-q10 = [[9,9,9,9,9, 9,9,2,3,1],
-       [9,9,9,9,0, 1,9,2,9,1],
-       [0,1,1,9,2, 2,9,1,3,1],
-       [2,9,2,9,9, 9,9,9,9,9],
-       [3,1,1,9,0, 9,9,2,2,9],
-       
-       [9,9,9,9,9, 1,9,1,0,9],
-       [9,9,1,1,9, 9,9,9,9,9],
-       [9,9,1,2,9, 1,2,0,9,9],
-       [9,9,9,9,9, 1,9,2,9,9],
-       [9,9,9,9,9, 2,2,2,9,1]]
+q10 :: StrBoard
+q10 = ["       231",
+       "    01 2 1",
+       "011 22 131",
+       "2 2       ",
+       "311 0  22 ",
+       "     1 10 ",
+       "  11      ",
+       "  12 120  ",
+       "     1 2  ",
+       "     222 1"]
